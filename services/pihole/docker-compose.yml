@@ -14,7 +14,7 @@ services:
       - "80:80/tcp"
     environment:
       TZ: 'UTC' # Change to your timezone, e.g., 'America/New_York'
-      WEBPASSWORD: 'admin' # Change this!
+      WEBPASSWORD: '${WEBPASSWORD}' # Loaded from .env
     volumes:
       - './etc-pihole:/etc/pihole'
       - './etc-dnsmasq.d:/etc/dnsmasq.d'
