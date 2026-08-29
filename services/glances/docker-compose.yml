@@ -2,7 +2,7 @@ version: '3'
 
 services:
   glances:
-    image: nicolargo/glances:latest-full
+    image: docker.io/nicolargo/glances:latest-full
     container_name: glances
     restart: unless-stopped
     pid: host
@@ -10,7 +10,8 @@ services:
     environment:
       - GLANCES_OPT=-w
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
       - /etc:/host/etc:ro
+      - /etc/passwd:/host/etc/passwd:ro
+      - /etc/group:/host/etc/group:ro
