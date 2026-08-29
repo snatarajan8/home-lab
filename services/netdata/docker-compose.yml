@@ -11,12 +11,10 @@ services:
       - netdataconfig:/etc/netdata
       - netdatalib:/var/lib/netdata
       - netdatacache:/var/cache/netdata
-      - /etc:/etc:ro
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
       - /etc/passwd:/host/etc/passwd:ro
       - /etc/group:/host/etc/group:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
 
 volumes:
   netdataconfig:
