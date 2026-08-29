@@ -31,8 +31,6 @@ services:
     volumes:
       - ./prometheus:/etc/prometheus:ro
       - prometheus_data:/prometheus
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -62,6 +60,25 @@ services:
         limits:
           cpus: '0.5'
           memory: 512M
+
+  glances:
+    image: nicolargo/glances:latest-full
+    container_name: glances
+    restart: unless-stopped
+    pid: host
+    ports:
+      - "61208:61208"
+    command: glances --export prometheus
+    volumes:
+      - /proc:/proc:ro
+      - /sys:/sys:ro
+    cap_drop:
+      - ALL
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
 
 volumes:
   prometheus_data:

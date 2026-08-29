@@ -25,6 +25,11 @@ We will adopt an **Evolutionary Observability** strategy. We will bypass "System
     * **Rootless/Docker Compatibility:** By using container-internal DNS (e.g., `node-exporter:9100`), we bypass the host-level `/etc/hosts` permission wall.
     * **Scalability:** Provides a stable, industry-standard foundation for long-term historical analysis.
 
+### Phase 4: Glances as Prometheus Exporter (Final Implementation)
+* **Goal:** Process-level observability without the friction of `process-exporter` image availability/permissions.
+* **Outcome:** **Successful.**
+* **Rationale:** While `process-exporter` was the initial target, persistent "access denied" errors and registry issues made it unreliable in this environment. **Glances** provides a robust, all-in-one alternative that supports a native Prometheus export mode, allowing us to maintain process-level visibility within our existing hardened stack.
+
 ---
 
 ## Deep Dive: The Rootless/Container Runtime Conflict
