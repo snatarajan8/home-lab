@@ -7,11 +7,6 @@ services:
     pid: host
     network_mode: host
     restart: unless-stopped
-    cap_add:
-      - SYS_PTRACE
-      - SYS_ADMIN
-    security_opt:
-      - apparmor:unconfined
     volumes:
       - netdataconfig:/etc/netdata
       - netdatalib:/var/lib/netdata
@@ -21,7 +16,7 @@ services:
       - /sys:/host/sys:ro
       - /etc/passwd:/host/etc/passwd:ro
       - /etc/group:/host/etc/group:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro # Will work if podman-docker is installed
+      - /var/run/docker.sock:/var/run/docker.sock:ro
 
 volumes:
   netdataconfig:
