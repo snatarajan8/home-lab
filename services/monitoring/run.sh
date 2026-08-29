@@ -1,17 +1,19 @@
 #!/bin/bash
-set -e
 
-# Navigate to the directory containing the docker-compose file
-cd "$(dirname "$0")"
-
-echo "Stopping existing monitoring containers..."
+echo "Stopping existing monitoring stack..."
 docker compose down
+
+echo "Removing old images..."
+# We don't want to remove everything, just the ones we've modified or are problematic
+# But for a clean start, we can remove the containers.
 
 echo "Starting monitoring stack..."
 docker compose up -d
 
-echo "Waiting for containers to initialize (15s)..."
-sleep 15
+echo "Waiting for containers to be ready..."
+sleep 10
 
-echo "Monitoring stack has been restarted."
-echo "Please check Grafana at http://localhost:3000 to verify the new dashboards."
+echo "Checking container status..."
+docker compose ps
+
+echo "Monitoring stack is up."

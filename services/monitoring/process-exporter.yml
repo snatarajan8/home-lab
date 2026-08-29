@@ -1,0 +1,4 @@
+process:
+  - name: "{{.Comm}}"
+    cmdline:
+      - '.+'

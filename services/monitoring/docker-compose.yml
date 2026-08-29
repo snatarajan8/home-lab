@@ -52,7 +52,6 @@ services:
     volumes:
       - grafana_data:/var/lib/grafana
       - ./provisioning:/etc/grafana/provisioning:ro
-      - ./dashboards:/var/lib/grafana/dashboards:ro
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
     cap_drop:
@@ -70,17 +69,36 @@ services:
     pid: host
     ports:
       - "61208:61208"
-    command: glances --export prometheus
+    command: ["python3", "-m", "glances", "--config", "/etc/glances/glances.conf", "--export", "prometheus", "-B", "0.0.0.0", "-p", "61208", "--enable-plugin", "processlist"]
     volumes:
       - /proc:/proc:ro
       - /sys:/sys:ro
-    cap_drop:
-      - ALL
+      - ./glances_config.conf:/etc/glances/glances.conf:ro
+    cap_add:
+      - SYS_PTRACE
+      - DAC_OVERRIDE
     deploy:
       resources:
         limits:
           cpus: '0.5'
           memory: 256M
+
+# process-exporter:
+#   image: stefanprodan/process-exporter:latest
+#   container_name: process-exporter
+#   restart: unless-stopped
+#   pid: host
+#   ports:
+#     - "9256:9256"
+#   command:
+#     - '--config.path=/etc/process-exporter/config.yml'
+#   volumes:
+#     - ./process-exporter.yml:/etc/process-exporter/config.yml:ro
+#   deploy:
+#     resources:
+#       limits:
+#         cpus: '0.5'
+#         memory: 256M
 
 volumes:
   prometheus_data:
