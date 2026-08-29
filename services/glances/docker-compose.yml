@@ -6,9 +6,9 @@ services:
     container_name: glances
     restart: unless-stopped
     pid: host
-    network_mode: host
-    environment:
-      - GLANCES_OPT=-w
+    ports:
+      - "61208:61208"
+    entrypoint: ["glances", "-w"]
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro

@@ -13,8 +13,6 @@ services:
       - netdatacache:/var/cache/netdata
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
-      - /etc/passwd:/host/etc/passwd:ro
-      - /etc/group:/host/etc/group:ro
 
 volumes:
   netdataconfig:
