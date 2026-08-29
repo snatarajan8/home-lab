@@ -17,10 +17,8 @@
   },
   "editable": true,
   "fiscalYearStartMonth": 0,
-  "graphTooltip": {
-    "mode": "single",
-    "sort": "none"
-  },
+  "graphTooltip": 0,
+  "id": null,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -43,7 +41,7 @@
                 "value": null
               },
               {
-                "color": "orange",
+                "color": "yellow",
                 "value": 70
               },
               {
@@ -57,7 +55,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 6,
+        "h": 4,
         "w": 6,
         "x": 0,
         "y": 0
@@ -81,9 +79,7 @@
           "editorMode": "code",
           "expr": "100 - (avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
           "format": "time_series",
-          "instant": true,
-          "legendFormat": "CPU Usage",
-          "range": false,
+          "range": true,
           "refId": "A"
         }
       ],
@@ -109,7 +105,7 @@
                 "value": null
               },
               {
-                "color": "orange",
+                "color": "yellow",
                 "value": 70
               },
               {
@@ -123,7 +119,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 6,
+        "h": 4,
         "w": 6,
         "x": 6,
         "y": 0
@@ -147,9 +143,7 @@
           "editorMode": "code",
           "expr": "(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100",
           "format": "time_series",
-          "instant": true,
-          "legendFormat": "Memory Usage",
-          "range": false,
+          "range": true,
           "refId": "A"
         }
       ],
@@ -175,21 +169,21 @@
                 "value": null
               },
               {
-                "color": "orange",
-                "value": 60
+                "color": "yellow",
+                "value": 70
               },
               {
                 "color": "red",
-                "value": 80
+                "value": 90
               }
             ]
           },
-          "unit": "celsius"
+          "unit": "percent"
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 6,
+        "h": 4,
         "w": 6,
         "x": 12,
         "y": 0
@@ -197,11 +191,8 @@
       "id": 3,
       "options": {
         "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
         "reduceDatasource": "last",
-        "textMode": "value_and_name"
+        "showUnfilled": false
       },
       "pluginVersion": "10.0.0",
       "targets": [
@@ -211,15 +202,13 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "node_hwmon_temp_celsius",
+          "expr": "100 - ((node_filesystem_avail_bytes{mountpoint=\"/\"} / node_filesystem_size_bytes{mountpoint=\"/\"}) * 100)",
           "format": "time_series",
-          "instant": true,
-          "legendFormat": "CPU Temp",
-          "range": false,
+          "range": true,
           "refId": "A"
         }
       ],
-      "title": "CPU Temperature",
+      "title": "Disk Usage (/)",
       "type": "stat"
     },
     {
@@ -241,21 +230,17 @@
                 "value": null
               },
               {
-                "color": "orange",
-                "value": 80
-              },
-              {
                 "color": "red",
-                "value": 95
+                "value": 80
               }
             ]
           },
-          "unit": "percent"
+          "unit": "celsius"
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 6,
+        "h": 4,
         "w": 6,
         "x": 18,
         "y": 0
@@ -263,11 +248,8 @@
       "id": 4,
       "options": {
         "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
         "reduceDatasource": "last",
-        "textMode": "value_and_name"
+        "showUnfilled": false
       },
       "pluginVersion": "10.0.0",
       "targets": [
@@ -277,23 +259,19 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "100 - ((node_filesystem_avail_bytes{mountpoint=\"/\"} / node_filesystem_size_bytes{mountpoint=\"/\"}) * 100)",
+          "expr": "glances_sensors_value{label=\"Tctl\"}",
           "format": "time_series",
-          "instant": true,
-          "legendFormat": "Disk Usage",
-          "range": false,
+          "range": true,
           "refId": "A"
         }
       ],
-      "title": "Disk Usage (/)",
+      "title": "CPU Temp",
       "type": "stat"
     }
   ],
   "schemaVersion": 38,
   "style": "dark",
-  "tags": [
-    "overview"
-  ],
+  "tags": [],
   "templating": {
     "list": []
   },
@@ -302,8 +280,7 @@
     "to": "now"
   },
   "timepicker": {},
-  "timezone": "America/New_York",
-  "uid": "system-overview",
-  "version": 1,
-  "title": "System Overview"
+  "timezone": "",
+  "title": "System Overview",
+  "version": 1
 }

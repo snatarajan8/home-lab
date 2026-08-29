@@ -17,10 +17,8 @@
   },
   "editable": true,
   "fiscalYearStartMonth": 0,
-  "graphTooltip": {
-    "mode": "single",
-    "sort": "none"
-  },
+  "graphTooltip": 1,
+  "id": null,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -37,7 +35,7 @@
           "custom": {
             "axisCenteredZero": false,
             "axisColorMode": "text",
-            "axisLabel": "",
+            "axisLabel": "%",
             "axisPlacement": "auto",
             "barAlignment": 0,
             "drawStyle": "line",
@@ -48,8 +46,8 @@
               "tooltip": false,
               "viz": false
             },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
             "pointSize": 5,
             "scaleDistribution": {
               "type": "linear"
@@ -69,8 +67,6 @@
                 }
               ]
             },
-            "lineWidth": 1,
-            "axisLabel": "%",
             "unit": "percent"
           },
           "mappings": [],
@@ -119,9 +115,22 @@
           "legendFormat": "CPU Usage %",
           "range": true,
           "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100",
+          "format": "time_series",
+          "instant": false,
+          "legendFormat": "Memory Usage %",
+          "range": true,
+          "refId": "B"
         }
       ],
-      "title": "CPU Usage Trend",
+      "title": "CPU & Memory Usage Trends",
       "type": "timeseries"
     },
     {
@@ -148,8 +157,8 @@
               "tooltip": false,
               "viz": false
             },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
             "pointSize": 5,
             "scaleDistribution": {
               "type": "linear"
@@ -169,9 +178,7 @@
                 }
               ]
             },
-            "lineWidth": 1,
-            "axisLabel": "%",
-            "unit": "percent"
+            "unit": "celsius"
           },
           "mappings": [],
           "thresholds": {
@@ -213,107 +220,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100",
-          "format": "time_series",
-          "instant": false,
-          "legendFormat": "Memory Usage %",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Memory Usage Trend",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholds": {
-              "mode": "absolute",
-              "steps": [
-                {
-                  "color": "green",
-                  "value": null
-                }
-              ]
-            },
-            "lineWidth": 1,
-            "axisLabel": "",
-            "unit": "celsius"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 8
-      },
-      "id": 3,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "10.0.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "editorMode": "code",
-          "expr": "node_hwmon_temp_celsius",
+          "expr": "glances_sensors_value{label=\"Tctl\"}",
           "format": "time_series",
           "instant": false,
           "legendFormat": "Temperature",
@@ -348,8 +255,8 @@
               "tooltip": false,
               "viz": false
             },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
             "pointSize": 5,
             "scaleDistribution": {
               "type": "linear"
@@ -369,9 +276,7 @@
                 }
               ]
             },
-            "lineWidth": 1,
-            "axisLabel": "",
-            "unit": "bytes/sec"
+            "unit": "bytes"
           },
           "mappings": [],
           "thresholds": {
@@ -390,9 +295,9 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 16
+        "y": 8
       },
-      "id": 4,
+      "id": 3,
       "options": {
         "legend": {
           "calcs": [],
@@ -448,8 +353,8 @@
               "tooltip": false,
               "viz": false
             },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
             "pointSize": 5,
             "scaleDistribution": {
               "type": "linear"
@@ -469,8 +374,6 @@
                 }
               ]
             },
-            "lineWidth": 1,
-            "axisLabel": "",
             "unit": "bytes/sec"
           },
           "mappings": [],
@@ -490,9 +393,9 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 16
+        "y": 8
       },
-      "id": 5,
+      "id": 4,
       "options": {
         "legend": {
           "calcs": [],
@@ -552,7 +455,7 @@
   },
   "timepicker": {},
   "timezone": "America/New_York",
-  "uid": "system-trends",
+  "uid": "homelab-system-trends",
   "version": 1,
   "title": "System Trends"
 }
