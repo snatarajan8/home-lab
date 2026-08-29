@@ -2,7 +2,7 @@ version: '3'
 
 services:
   netdata:
-    image: netdata/netdata:latest
+    image: docker.io/netdata/netdata:latest
     container_name: netdata
     pid: host
     network_mode: host
