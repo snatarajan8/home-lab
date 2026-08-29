@@ -17,7 +17,7 @@ Agents should follow these steps in sequence for any non-trivial task:
     - **Stop and wait for user feedback** on the decision doc. Note: The user prefers reviewing decision docs and plans via the GitHub UI.
 
 3.  **Phase 3: Planning**
-    - Once a decision is reached, enter `EnterPlanMode`.
+    - Once a decision is reached, update the decision doc with the final outcome, then enter `EnterPlanMode`.
     - Create a detailed implementation plan in the `.claude/plans/` directory.
     - Present the plan to the user for approval.
 
