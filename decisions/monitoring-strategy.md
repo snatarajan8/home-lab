@@ -1,39 +1,37 @@
-# Monitoring Strategy: Netdata to Prometheus/Grafana
+# Monitoring Strategy: Evolutionary Observability
 
 ## Context
 As the home-lab grows, monitoring the resource usage (CPU, RAM, Disk, Network) of the Ryzen Halo host and its containers is critical to avoid resource contention, especially when running large LLMs.
 
 ## Decision
-We will adopt an **Evolutionary Monitoring Strategy**. We will start with **Netdata** for immediate, low-overhead visibility and migrate to a **Prometheus/Grafana** stack as the complexity of the lab increases.
+We will adopt an **Evolutionary Observability** strategy. We will bypass "System-Centric" tools that conflict with rootless container runtimes and move straight to a **Prometheus + Grafana** stack.
 
 ## Rationale
 
-### Phase 1: Netdata (Current)
+### Phase 1: Netdata (Attempted)
 * **Goal:** Immediate visibility with minimal resource "tax."
-* **Pros:** 
-    * Extremely low memory footprint.
-    * Zero configuration required.
-    * Provides high-resolution, real-time metrics.
-* **Cons:** Limited long-term historical analysis and harder to unify into a single "fleet-wide" dashboard.
-* **Why now:** We need to establish a resource baseline to understand how much headroom remains for LLM workloads without committing significant RAM to a complex monitoring stack.
+* **Outcome:** **Failed.**
+* **Failure Reason:** Netdata's container entrypoint attempts to perform system-level configuration tasks (like managing users and writing to `/etc`) that conflict with the security boundaries of Podman's user namespaces.
 
-### Phase 2: Prometheus + Grafana (Future)
+### Phase 2: Glances (Attempted)
+* **Goal:** Lightweight, rootless-friendly monitoring.
+* **Outcome:** **Failed.**
+* **Failure Reason:** Even with a stripped-down configuration, the container runtime attempted to create the `/etc/hosts` file, which triggered a permission error due to the way rootless Podman manages the container's identity.
+
+### Phase 3: Prometheus + Grafana (Final Selection)
 * **Goal:** Professional-grade, unified observability.
 * **Pros:** 
-    * Industry standard for DevOps.
-    * Powerful long-term data retention and complex querying.
-    * Highly customizable, beautiful dashboards.
-* **Cons:** Higher resource overhead (RAM/CPU) due to multiple components (Exporter, Database, GUI).
-* **Trigger for Migration:** When the number of managed services exceeds the capacity of a single-host view, or when long-term historical trending becomes a requirement.
+    * **Architectural Decoupling:** Prometheus uses a "Pull" model via HTTP, making it agnostic to the host's filesystem or identity.
+    * **Rootless Compatibility:** As pure application processes, they do not attempt host-level administrative tasks.
+    * **Scalability:** Provides a stable, industry-standard foundation for long-term historical analysis.
 
 ---
 
-## Pivot: Netdata to Glances
+## Deep Dive: Why not use `sudo`?
 
-### Problem with Netdata
-During implementation, Netdata failed to start in a rootless Podman environment. The error `failed to create new hosts file: open /etc/hosts: permission denied` occurred because Netdata's container entrypoint attempts to perform system-level configuration tasks (like managing users and writing to `/etc`) that conflict with the security boundaries of Podman's user namespaces.
+During troubleshooting, the option to run containers with `sudo` was considered. This was rejected based on two architectural principles:
 
-### Why Glances is a better choice for this environment
-* **Architectural Simplicity:** Glances is a lightweight, process-based monitor rather than a heavy-duty system integrator. It focuses on reading system state from `/proc` and `/sys` and serving it via a web interface.
-* **Rootless Compatibility:** Unlike Netdata, Glances does not attempt to perform administrative tasks (like `usermod` or deep system configuration) within its container. This makes it highly compatible with the permission constraints of rootless Podman.
-* **Resource Efficiency:** It has a smaller memory and CPU footprint, which is critical for maintaining headroom for LLM workloads on the Ryzen Halo.
+1.  **Security (Blast Radius):** Running a web-facing application like Netdata or Glances as `root` creates a massive security risk. A single vulnerability could lead to full host compromise.
+2.  **Management Debt:** Using `sudo` breaks the rootless model, leading to complex permission issues when managing files and volumes as a regular user.
+
+**The goal is to build a lab that is secure by design, not one that is "fixed" by bypassing security boundaries.**
