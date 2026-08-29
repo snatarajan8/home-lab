@@ -27,6 +27,14 @@ We will adopt an **Evolutionary Observability** strategy. We will bypass "System
 
 ---
 
+## Deep Dive: The Rootless/Container Runtime Conflict
+
+During troubleshooting, we encountered a critical failure where even the simplest container creation failed with `open /etc/hosts: permission denied`. 
+
+As documented in [[podman-rootless-permission-denied-analysis]], this is a fundamental conflict between the OCI runtime (`crun`) and the host's user namespace/filesystem implementation (`fuse-overlayfs`). This error occurs at the most atomic level of container initialization, meaning no amount of configuration within the container itself can bypass it.
+
+**Conclusion:** While the "Rootless" model is architecturally superior for security, the current host environment's implementation of rootless Podman is effectively non-functional for standard container workloads.
+
 ## Deep Dive: Why not use `sudo`?
 
 During troubleshooting, the option to run containers with `sudo` was considered. This was rejected based on two architectural principles:

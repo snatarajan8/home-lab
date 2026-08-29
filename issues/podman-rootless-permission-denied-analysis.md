@@ -41,6 +41,8 @@ It is important to distinguish between a **bug** and a **design constraint**:
 * **It is not a bug:** Podman is performing exactly as designed—enforcing the security boundary of the unprivileged user.
 * **It is a design constraint:** The very thing that makes Podman "secure" (the isolation of the user namespace) is what makes "system-level" configurations like `extra_hosts` and `network_mode: host` difficult to implement.
 
+**Crucially, testing revealed that this issue is not limited to complex configurations. Even a bare-bones `podman run` command failed with the same error, indicating a systemic failure in the host's rootless runtime environment.**
+
 ## 5. Decision Matrix: Podman (Tweaks) vs. Docker (Pivot)
 
 The user is at a crossroads. Both paths have distinct trade-offs.
@@ -64,6 +66,6 @@ The user is at a crossroads. Both paths have distinct trade-offs.
 * **Cons:** **Reduced Security.** A compromise in a container (like a web-facing Grafana instance) has a higher chance of impacting the host because the daemon runs as `root`.
 
 ## 6. Conclusion/Recommendation
-If the user's priority is **Security and Best Practice**, they should **stay with Podman** but adopt a "Data-Centric" configuration that avoids host-level identity manipulation (i.e., use static Tailscale IPs instead of `host-gateway`).
+Given that even minimal container initialization fails, **the "Stay Rootless" path is no longer viable on this specific host environment.**
 
-If the user's priority is **Operational Simplicity and Rapid Deployment**, they should **pivot to Docker**, accepting the increased security risk as a trade-off for a smoother experience.
+The recommendation is to **Pivot to Docker** to ensure a stable and functional home-lab environment, accepting the security trade-off of a root-privileged daemon.
