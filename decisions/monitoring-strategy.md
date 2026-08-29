@@ -22,18 +22,30 @@ We will adopt an **Evolutionary Observability** strategy. We will bypass "System
 * **Goal:** Professional-grade, unified observability.
 * **Pros:** 
     * **Architectural Decoupling:** Prometheus uses a "Pull" model via HTTP, making it agnostic to the host's filesystem or identity.
-    * **Rootless Compatibility:** As pure application processes, they do not attempt host-level administrative tasks.
+    * **Rootless/Docker Compatibility:** By using container-internal DNS (e.g., `node-exporter:9100`), we bypass the host-level `/etc/hosts` permission wall.
     * **Scalability:** Provides a stable, industry-standard foundation for long-term historical analysis.
 
 ---
 
 ## Deep Dive: The Rootless/Container Runtime Conflict
 
-During troubleshooting, we encountered a critical failure where even the simplest container creation failed with `open /etc/hosts: permission denied`. 
+During troubleshooting, we encountered a critical failure where even the most minimal container creation failed with `open /etc/hosts: permission denied`. 
 
 As documented in [[podman-rootless-permission-denied-analysis]], this is a fundamental conflict between the OCI runtime (`crun`) and the host's user namespace/filesystem implementation (`fuse-overlayfs`). This error occurs at the most atomic level of container initialization, meaning no amount of configuration within the container itself can bypass it.
 
-**Conclusion:** While the "Rootless" model is architecturally superior for security, the current host environment's implementation of rootless Podman is effectively non-functional for standard container workloads.
+**Conclusion:** While the "Rootless" model is architecturally superior for security, the current host environment's implementation of rootless Podman is effectively non-functional for standard container workloads. We have successfully implemented a "Hardened Docker" alternative.
+
+## Deep Dive: Hardened Docker Strategy
+
+To mitigate the increased security risk of running a root-privileged Docker daemon, we implement a **Defense in Depth** approach:
+
+1.  **Least Privilege (User Identity):** We explicitly specify non-root users within containers (e.g., `user: "472"` for Grafana).
+2.  **Capability Stripping:** We use `cap_drop: [ALL]` and selectively `cap_add` only what is strictly necessary (e.g., `SYS_TIME` for `node-exporter`).
+3.  **Filesystem Immutability:** We utilize read-only mounts (`:ro`) for all host-to-container configuration volumes.
+4.  **Network Segmentation:** We use dedicated Docker networks to isolate different service tiers.
+5.  **Resource Governance:** We define CPU and memory limits for every service to prevent host resource exhaustion.
+
+---
 
 ## Deep Dive: Why not use `sudo`?
 

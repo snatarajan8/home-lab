@@ -1,7 +1,7 @@
 # Technical Analysis: Rootless Podman Permission Denied (`/etc/hosts`)
 
 ## 1. Executive Summary
-The persistent `permission denied` error encountered when deploying the Prometheus/Grafana stack is not a bug in the application code, but a fundamental conflict between the **container runtime's initialization process** and the **security constraints of Podman's rootless user namespaces**.
+The persistent `permission denied` error encountered when deploying the Prometheus/Grafana stack is not a bug in the application code, but a fundamental conflict between the **container runtime's initialization process** and the **security constraints of Podman's user namespaces**.
 
 The error specifically occurs when the runtime attempts to satisfy the `extra_hosts` directive in `docker-compose.yml`. This task—writing a new `/etc/hosts` file for the container—requires host-level file manipulation that the rootless user process is being blocked from performing.
 
@@ -9,9 +9,9 @@ The error specifically occurs when the runtime attempts to satisfy the `extra_ho
 
 ### The Mechanics of `extra_hosts`
 When you define `extra_hosts` (e.g., `host.docker.internal:host-gateway`), the container engine does not simply "add a line" to an existing file inside the container. Instead:
-1. It identifies the required host mapping.
-2. It generates a **temporary hosts file** on the host machine.
-3. It attempts to **bind-mount** this temporary file into the container's `/etc/hosts` location during the container's creation.
+1.  It identifies the required host mapping.
+2.  It generates a **temporary hosts file** on the host machine.
+3.  It attempts to **bind-mount** this temporary file into the container's `/etc/hosts` location during the container's creation.
 
 ### The Rootless User Namespace Dilemma
 In a **Rooted Docker** environment, the Docker Daemon runs as the real `root` user. It has absolute authority to create files anywhere in the container's filesystem and manage mounts.
