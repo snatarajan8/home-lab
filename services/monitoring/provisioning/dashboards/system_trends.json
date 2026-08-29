@@ -551,5 +551,8 @@
     "to": "now"
   },
   "timepicker": {},
-  "timezone": ""
+  "timezone": "America/New_York",
+  "uid": "system-trends",
+  "version": 1,
+  "title": "System Trends"
 }

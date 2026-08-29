@@ -302,5 +302,8 @@
     "to": "now"
   },
   "timepicker": {},
-  "timezone": ""
+  "timezone": "America/New_York",
+  "uid": "system-overview",
+  "version": 1,
+  "title": "System Overview"
 }
