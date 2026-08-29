@@ -1,0 +1,1 @@
+- [Metrics Aggregation Strategy](decisions/metrics-aggregation-strategy.md) — Comparison of Pull, Push (Pushgateway), and OTel approaches for metrics collection.

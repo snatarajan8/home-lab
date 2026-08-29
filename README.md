@@ -6,6 +6,10 @@ This repository contains the infrastructure-as-code (IaC), configuration, and do
 
 The lab is built around a "Hardened Docker" model, utilizing Docker to provide stable, performant services while mitigating security risks through strict capability stripping, resource limits, and non-root user identities.
 
+### Connectivity
+
+Tailscale is implemented across several devices in the lab, providing a secure and seamless mesh network for remote access and inter-device communication.
+
 ## Repository Structure
 
 *   `services/`: Contains the service definitions and configurations.
@@ -41,8 +45,7 @@ For other services added to the repository, navigate to their respective directo
 docker compose up -d
 ```
 
-## Documentation & Guidelines
+## Current Initiatives
 
-- **Decision Log:** Refer to the `decisions/` directory to understand the "why" behind the current stack configuration.
-- **Issue Analysis:** Refer to the `issues/` directory for detailed technical post-mortems on previous challenges.
-- **Agent Instructions:** All AI agents must adhere to the guidelines in `agent-guidelines.md`.
+### Metrics Aggregation Service (Planned)
+Implementation of a central metrics aggregator on the Ryzen Halo using Prometheus Pushgateway. This will allow edge devices and other network components to push metrics directly to the Halo, which will then be scraped by Prometheus and visualized in Grafana.
