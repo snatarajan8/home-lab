@@ -1,0 +1,21 @@
+version: '3'
+
+services:
+  pihole:
+    container_name: pihole
+    image: pihole/pihole:latest
+    # For Pi-hole to work, it needs to bind to port 53. 
+    # If your host machine has systemd-resolved running on port 53, 
+    # you may need to disable it or use a different IP.
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "67:67/udp" # DHCP
+      - "80:80/tcp"
+    environment:
+      TZ: 'UTC' # Change to your timezone, e.g., 'America/New_York'
+      WEBPASSWORD: 'admin' # Change this!
+    volumes:
+      - './etc-pihole:/etc/pihole'
+      - './etc-dnsmasq.d:/etc/dnsmasq.d'
+    restart: unless-stopped
