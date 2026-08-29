@@ -14,7 +14,7 @@ Agents should follow these steps in sequence for any non-trivial task:
 2.  **Phase 2: Decision & Strategy**
     - For any new design choice, architectural change, or strategic pivot, **create a decision doc** in the `decisions/` directory.
     - The decision doc must evaluate pros/cons and present options to the user.
-    - **Stop and wait for user feedback** on the decision doc.
+    - **Stop and wait for user feedback** on the decision doc. Note: The user prefers reviewing decision docs and plans via the GitHub UI.
 
 3.  **Phase 3: Planning**
     - Once a decision is reached, enter `EnterPlanMode`.
