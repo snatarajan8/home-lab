@@ -35,117 +35,6 @@
           "custom": {
             "axisCenteredZero": false,
             "axisColorMode": "text",
-            "axisLabel": "%",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "smooth",
-            "lineWidth": 2,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholds": {
-              "mode": "absolute",
-              "steps": [
-                {
-                  "color": "green",
-                  "value": null
-                }
-              ]
-            },
-            "unit": "percent"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 0
-      },
-      "id": 1,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "10.0.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "editorMode": "code",
-          "expr": "100 - (avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
-          "format": "time_series",
-          "instant": false,
-          "legendFormat": "CPU Usage %",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "editorMode": "code",
-          "expr": "(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100",
-          "format": "time_series",
-          "instant": false,
-          "legendFormat": "Memory Usage %",
-          "range": true,
-          "refId": "B"
-        }
-      ],
-      "title": "CPU & Memory Usage Trends",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
@@ -178,7 +67,7 @@
                 }
               ]
             },
-            "unit": "celsius"
+            "unit": "bytes"
           },
           "mappings": [],
           "thresholds": {
@@ -194,12 +83,12 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
+        "h": 9,
+        "w": 24,
+        "x": 0,
         "y": 0
       },
-      "id": 2,
+      "id": 1,
       "options": {
         "legend": {
           "calcs": [],
@@ -208,8 +97,8 @@
           "showLegend": true
         },
         "tooltip": {
-          "mode": "single",
-          "sort": "none"
+          "mode": "multi",
+          "sort": "desc"
         }
       },
       "pluginVersion": "10.0.0",
@@ -220,15 +109,46 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "node_hwmon_temp_celsius * on(chip, sensor, instance) group_left(label) node_hwmon_sensor_label{label=\"Tctl\"}",
-          "format": "time_series",
-          "instant": false,
-          "legendFormat": "CPU Temperature",
+          "expr": "node_memory_MemTotal_bytes",
+          "legendFormat": "Total",
           "range": true,
           "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes",
+          "legendFormat": "Used",
+          "range": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "node_memory_Buffers_bytes",
+          "legendFormat": "Buffers",
+          "range": true,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "node_memory_Cached_bytes",
+          "legendFormat": "Cached",
+          "range": true,
+          "refId": "D"
         }
       ],
-      "title": "Temperature Trend",
+      "title": "Memory Breakdown",
       "type": "timeseries"
     },
     {
@@ -295,9 +215,9 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 8
+        "y": 9
       },
-      "id": 3,
+      "id": 2,
       "options": {
         "legend": {
           "calcs": [],
@@ -318,15 +238,13 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "rate(node_disk_read_bytes_total[5m]) + rate(node_disk_written_bytes_total[5m])",
-          "format": "time_series",
-          "instant": false,
-          "legendFormat": "Disk I/O",
+          "expr": "node_memory_SwapTotal_bytes - node_memory_SwapFree_bytes",
+          "legendFormat": "Swap Used",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Disk I/O Trend",
+      "title": "Swap Usage (host currently has no swap configured)",
       "type": "timeseries"
     },
     {
@@ -337,44 +255,14 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic"
+            "mode": "thresholds"
           },
           "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
             },
-            "lineInterpolation": "smooth",
-            "lineWidth": 2,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholds": {
-              "mode": "absolute",
-              "steps": [
-                {
-                  "color": "green",
-                  "value": null
-                }
-              ]
-            },
-            "unit": "bytes/sec"
+            "inspect": false
           },
           "mappings": [],
           "thresholds": {
@@ -385,7 +273,8 @@
                 "value": null
               }
             ]
-          }
+          },
+          "unit": "bytes"
         },
         "overrides": []
       },
@@ -393,20 +282,24 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 8
+        "y": 9
       },
-      "id": 4,
+      "id": 3,
       "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": ["sum"],
+          "show": false
         },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Value"
+          }
+        ]
       },
       "pluginVersion": "10.0.0",
       "targets": [
@@ -416,36 +309,38 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "rate(node_network_receive_bytes_total[5m])",
-          "format": "time_series",
-          "instant": false,
-          "legendFormat": "Network Rx",
-          "range": true,
+          "expr": "topk(10, namedprocess_namegroup_memory_bytes{memtype=\"resident\"})",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "{{groupname}}",
+          "range": false,
           "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "editorMode": "code",
-          "expr": "rate(node_network_transmit_bytes_total[5m])",
-          "format": "time_series",
-          "instant": false,
-          "legendFormat": "Network Tx",
-          "range": true,
-          "refId": "B"
         }
       ],
-      "title": "Network Throughput Trend",
-      "type": "timeseries"
+      "title": "Top 10 Processes by Memory",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "instance": true,
+              "job": true,
+              "memtype": true
+            },
+            "renameByName": {
+              "groupname": "Process"
+            }
+          }
+        }
+      ],
+      "type": "table"
     }
   ],
   "schemaVersion": 38,
   "style": "dark",
-  "tags": [
-    "trends"
-  ],
+  "tags": ["detail"],
   "templating": {
     "list": []
   },
@@ -454,8 +349,8 @@
     "to": "now"
   },
   "timepicker": {},
-  "timezone": "America/New_York",
-  "uid": "homelab-system-trends",
+  "timezone": "",
+  "uid": "homelab-memory-detail",
   "version": 1,
-  "title": "System Trends"
+  "title": "Memory & Process Detail"
 }

@@ -20,14 +20,10 @@ This list tracks the progress of the homelab build and outlines the next steps f
 ## Pending Review
 
 ### 1. Monitoring Dashboards
-- [ ] **Verify Grafana Dashboards**: Access `http://localhost:3000` and check:
-    - `System Overview`: Ensure metrics for CPU, Memory, Disk, and Temperature are visible and correct.
-    - `System Trends`: Ensure time-series graphs are populating correctly.
-- [ ] **Verify Provisioning**: Confirm that new `.json` files added to `services/monitoring/provisioning/dashboards/` appear automatically.
-- [ ] **Process Monitoring Decision**: I attempted to add `process-exporter` but encountered registry access errors.
-    - *Option A*: Use `glances_processcount` as a light-weight alternative.
-    - *Option B*: Build `process-exporter` from source in a custom container.
-    - *Option C*: Try a different image if you have a preferred one.
+- [x] **Process Monitoring Decision**: Resolved — see `decisions/dashboard-observability-depth.md`. The original `process-exporter` failure was a nonexistent image name (`stefanprodan/process-exporter`), not a registry block; the canonical `ncabatoff/process-exporter` image pulls fine. Its config file also had the wrong top-level YAML key (`process:` instead of `process_names:`), which silently tracked zero processes — fixed, now tracking 288 process groups including root-owned daemons.
+- [x] **Verify Grafana Dashboards**: Confirmed via direct Prometheus queries (headless SSH session, no browser) — `System Overview`/`System Trends` corrected CPU/temperature queries return data; `CPU Detail`, `Memory & Process Detail`, `Temperature Detail`, `Disk & I/O Detail` all return non-empty results for every panel query.
+    - [ ] **`Container Overview` is provisioned but non-functional** — `cadvisor` can't see per-container cgroup stats under rootless Podman (private cgroup namespace, `cgroup: host` doesn't propagate through Podman's Docker-compat layer). Root-caused in `issues/cadvisor-rootless-cgroupns-analysis.md`; possible fix is a native Podman-stats-API exporter instead of cadvisor. Open — visual confirmation in an actual browser still recommended once you're at a non-headless client.
+- [x] **Verify Provisioning**: Confirmed — dropping new `.json` files into `services/monitoring/dashboards/` and restarting Grafana auto-registered all 5 new dashboards (no manual import needed). Path in this doc corrected — dashboards live here since the provisioning restructure, not under `provisioning/dashboards/`.
 
 ## Next Implementation Steps (Proposed)
 

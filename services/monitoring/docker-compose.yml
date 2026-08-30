@@ -84,22 +84,47 @@ services:
           cpus: '0.5'
           memory: 256M
 
-# process-exporter:
-#   image: stefanprodan/process-exporter:latest
-#   container_name: process-exporter
-#   restart: unless-stopped
-#   pid: host
-#   ports:
-#     - "9256:9256"
-#   command:
-#     - '--config.path=/etc/process-exporter/config.yml'
-#   volumes:
-#     - ./process-exporter.yml:/etc/process-exporter/config.yml:ro
-#   deploy:
-#     resources:
-#       limits:
-#         cpus: '0.5'
-#         memory: 256M
+  process-exporter:
+    image: ncabatoff/process-exporter:latest
+    container_name: process-exporter
+    restart: unless-stopped
+    pid: host
+    command:
+      - '--procfs=/host/proc'
+      - '--config.path=/etc/process-exporter/config.yml'
+    volumes:
+      - /proc:/host/proc:ro
+      - ./process-exporter.yml:/etc/process-exporter/config.yml:ro
+    cap_drop:
+      - ALL
+    cap_add:
+      - SYS_PTRACE
+      - DAC_OVERRIDE
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 128M
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    container_name: cadvisor
+    restart: unless-stopped
+    cgroup: host
+    volumes:
+      - /:/rootfs:ro
+      - /sys:/sys:ro
+      - /run/user/1001/podman/podman.sock:/var/run/docker.sock:ro
+    cap_drop:
+      - ALL
+    cap_add:
+      - SYS_PTRACE
+      - DAC_READ_SEARCH
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
 
 volumes:
   prometheus_data:

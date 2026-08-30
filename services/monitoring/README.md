@@ -10,6 +10,8 @@ This directory contains the Docker-based monitoring stack for the Ryzen Halo hos
 | **Prometheus** | Time-series database | `http://<host-ip>:9090` | `cap_drop: [ALL]`, Resource limits, Read-only config |
 | **Grafana** | Data visualization | `http://<host-ip>:3000` | Non-root user (`uid 472`), `cap_drop: [ALL]`, Resource limits |
 | **Glances** | Process & System metrics | `http://<host-ip>:61208` | `cap_drop: [ALL]`, Resource limits, PID host namespace |
+| **process-exporter** | Per-process CPU/Memory/Disk-IO | (internal, scraped by Prometheus) | `cap_drop: [ALL]`, `cap_add: [SYS_PTRACE, DAC_OVERRIDE]`, Resource limits |
+| **cAdvisor** | Per-container CPU/Memory/Network | (internal, scraped by Prometheus) | `cap_drop: [ALL]`, `cap_add: [SYS_PTRACE, DAC_READ_SEARCH]`, Resource limits, read-only rootless Podman socket |
 
 ## Security Architecture
 

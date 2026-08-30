@@ -259,7 +259,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "glances_sensors_value{label=\"Tctl\"}",
+          "expr": "node_hwmon_temp_celsius * on(chip, sensor, instance) group_left(label) node_hwmon_sensor_label{label=\"Tctl\"}",
           "format": "time_series",
           "range": true,
           "refId": "A"
@@ -267,6 +267,17 @@
       ],
       "title": "CPU Temp",
       "type": "stat"
+    }
+  ],
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": ["detail"],
+      "title": "Drill-down dashboards",
+      "type": "dashboards"
     }
   ],
   "schemaVersion": 38,
