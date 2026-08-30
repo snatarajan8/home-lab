@@ -67,11 +67,31 @@ Cramming 32 CPU-core series, ~10 temperature sensors, and multiple top-N process
 
 Alternative considered: keep two dashboards and add collapsible rows for the detail data. Rejected — it directly works against what you asked for; separate dashboards make "digging deep" an explicit, deliberate action instead of visual clutter on the page you check by default.
 
-## Open Questions for You
+## Decision 5: Container-Level Visibility (added at user's request)
 
-1.  **Top-N size** — default to top 5 or top 10 processes per resource table?
-2.  **Detail dashboard grouping** — four separate dashboards (CPU / Memory / Temperature / Disk) as above, or would you rather combine some (e.g. one "Process Explorer" dashboard with per-resource tables, separate from a "Hardware Detail" dashboard for cores+sensors)?
-3.  Any objection to adding `process-exporter` as a fourth monitoring container, given the existing resource-limit/capability-stripping pattern used for the others?
+Nothing in the current stack monitors *per-container* resource usage — only the host as a whole (`node_exporter`) and OS-level processes (`process-exporter`, once enabled). For a host whose entire purpose is running Docker services, "which container is eating CPU/memory/network" is a distinct and high-value question from "which process is."
+
+| Option | How | Pros | Cons |
+| :--- | :--- | :--- | :--- |
+| **A. cAdvisor** (recommended) | Add `gcr.io/cadvisor/cadvisor`, scrape it from Prometheus | Purpose-built, standard tool for exactly this (used industry-wide); exposes per-container CPU/mem/network/disk/restart-count natively in Prometheus format; pairs naturally with the existing `container_name` labels already used across this stack | Needs read access to `/var/run/docker.sock` to enumerate containers — a materially more sensitive mount than the read-only `/proc`/`/sys` used elsewhere, since it can read container metadata/env vars (though not create/exec/control containers if mounted read-only); some images want `--privileged`, though there are documented non-privileged configs using targeted mounts (`/sys`, `/var/lib/docker`, `/dev/disk`) instead |
+| **B. Skip it** | — | No new privilege surface | Leaves the single biggest blind spot for a dedicated Docker host unaddressed |
+
+**Recommendation: Option A**, mounting the Docker socket **read-only** and avoiding `--privileged` (using the documented non-privileged mount set instead), consistent with the capability-stripping pattern already used for every other container in this stack.
+
+## Final Outcome
+
+Decisions confirmed:
+
+1.  **Top-N size:** 10 processes/containers per resource table.
+2.  **Detail dashboard grouping:** the four resource-oriented dashboards from Decision 4 (CPU Detail / Memory & Process Detail / Temperature Detail / Disk & I/O Detail) — each pairs a resource's utilization with its own top consumers, matching standard practice (e.g. Node Exporter Full, USE-method dashboards) and the natural "it's high → who's doing it" workflow.
+3.  **`process-exporter`:** approved, no objection raised.
+4.  **Container-level visibility:** approved — add `cAdvisor` and a new **`Container Overview`** dashboard (top containers by CPU/mem/network/disk, restart counts), read-only Docker socket mount, no `--privileged`.
+
+Proceeding to implementation planning (`.claude/plans/`) covering:
+- `docker-compose.yml`: uncomment/fix `process-exporter` (correct image), add `cadvisor`.
+- Repoint `System Overview`/`System Trends` CPU and temperature queries at the corrected metrics.
+- New dashboards: `CPU Detail`, `Memory & Process Detail`, `Temperature Detail`, `Disk & I/O Detail`, `Container Overview` — provisioned the same way as the existing two.
+- Dashboard-links row on `System Overview` linking to all five detail dashboards.
 
 ## Note (unrelated, not fixed)
 
