@@ -126,6 +126,20 @@ services:
           cpus: '0.3'
           memory: 128M
 
+  pushgateway:
+    image: prom/pushgateway:latest
+    container_name: pushgateway
+    restart: unless-stopped
+    ports:
+      - "9091:9091"
+    cap_drop:
+      - ALL
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 128M
+
 volumes:
   prometheus_data:
   grafana_data:

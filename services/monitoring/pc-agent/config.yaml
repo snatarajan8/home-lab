@@ -1,0 +1,11 @@
+pushgateway_url: "http://localhost:9091"
+push_interval: 15
+metrics:
+  cpu: true
+  memory: true
+  disk: true
+  network: true
+  temperature: true
+  load: true
+  disk_paths:
+    - "/"
