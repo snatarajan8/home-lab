@@ -200,7 +200,7 @@
       "pluginVersion": "10.0.0",
       "targets": [
         { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "rate(node_network_receive_bytes_total{device=~\"$device\"}[5m])", "format": "time_series", "instant": false, "legendFormat": "{{device}} Rx", "range": true, "refId": "A" },
-        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "-rate(node_network_transmit_bytes_total{device=~\"$device\"}[5m])", "format": "time_series", "instant": false, "legendFormat": "{{device}} Tx", "range": true, "refId": "B" }
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "rate(node_network_transmit_bytes_total{device=~\"$device\"}[5m])", "format": "time_series", "instant": false, "legendFormat": "{{device}} Tx", "range": true, "refId": "B" }
       ],
       "title": "Network Throughput Trend",
       "type": "timeseries"
