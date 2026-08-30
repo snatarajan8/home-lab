@@ -17,6 +17,7 @@ import logging
 import os
 import socket
 import sys
+import subprocess
 from http.client import HTTPConnection
 from urllib.parse import urlparse
 
@@ -143,19 +144,50 @@ def collect_network(device: str) -> list[str]:
 
 def collect_temperature(device: str) -> list[str]:
     lines = []
+
     try:
         temps = psutil.sensors_temperatures()
     except (AttributeError, OSError):
+        temps = {}
+
+    if temps:
+        for chip_name, entries in temps.items():
+            for entry in entries:
+                if entry.current is not None and entry.current > 0:
+                    sensor = escape_label_value(entry.label or "unknown")
+                    chip = escape_label_value(chip_name)
+                    lines.append(
+                        f'node_hwmon_temp_celsius{{device="{device}",chip="{chip}",sensor="{sensor}"}} {entry.current:.1f}'
+                    )
         return lines
 
-    for chip_name, entries in temps.items():
-        for entry in entries:
-            if entry.current is not None and entry.current > 0:
-                sensor = escape_label_value(entry.label or "unknown")
-                chip = escape_label_value(chip_name)
+    try:
+        result = subprocess.run(
+            ["powershell.exe", "-NoProfile", "-Command",
+             "Get-CimInstance MSAcpi_ThermalZoneTemperature -Namespace 'root/WMI' "
+             "| Select-Object CurrentTemperature, InstanceName | ConvertTo-Json"],
+            capture_output=True, text=True, timeout=10
+        )
+        if result.returncode != 0:
+            return lines
+
+        import json
+        data = json.loads(result.stdout)
+        if isinstance(data, dict):
+            data = [data]
+
+        for zone in data:
+            raw_temp = zone.get("CurrentTemperature", 0)
+            name = zone.get("InstanceName", "thermal_zone")
+            celsius = (raw_temp / 10) - 273.15
+            if celsius > 0:
+                sensor = escape_label_value(name.split("\\")[-1])
                 lines.append(
-                    f'node_hwmon_temp_celsius{{device="{device}",chip="{chip}",sensor="{sensor}"}} {entry.current:.1f}'
+                    f'node_hwmon_temp_celsius{{device="{device}",chip="wmi",sensor="{sensor}"}} {celsius:.1f}'
                 )
+    except (subprocess.TimeoutExpired, FileNotFoundError, json.JSONDecodeError, Exception):
+        pass
+
     return lines
 
 
