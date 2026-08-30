@@ -1,4 +1,4 @@
-pushgateway_url: "http://localhost:9091"
+pushgateway_url: "http://amd-halo:9091"
 push_interval: 15
 metrics:
   cpu: true
