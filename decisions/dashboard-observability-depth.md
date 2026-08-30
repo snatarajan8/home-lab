@@ -85,7 +85,7 @@ Decisions confirmed:
 1.  **Top-N size:** 10 processes/containers per resource table.
 2.  **Detail dashboard grouping:** the four resource-oriented dashboards from Decision 4 (CPU Detail / Memory & Process Detail / Temperature Detail / Disk & I/O Detail) — each pairs a resource's utilization with its own top consumers, matching standard practice (e.g. Node Exporter Full, USE-method dashboards) and the natural "it's high → who's doing it" workflow.
 3.  **`process-exporter`:** approved, no objection raised.
-4.  **Container-level visibility:** approved — add `cAdvisor` and a new **`Container Overview`** dashboard (top containers by CPU/mem/network/disk, restart counts), read-only Docker socket mount, no `--privileged`.
+4.  **Container-level visibility:** approved — add a new **`Container Overview`** dashboard (top containers by CPU/memory/network). Implementation ended up using `prometheus-podman-exporter` rather than `cAdvisor` as planned here: `cAdvisor` turned out to be structurally incompatible with this host's rootless Podman (private cgroup namespace blocks it from reading other containers' stats, and the standard `cgroup: host` fix doesn't propagate through Podman's Docker-compat API). `prometheus-podman-exporter` talks to Podman's native API directly instead of the cgroup filesystem, sidestepping the problem. Full root-cause and resolution in `issues/cadvisor-rootless-cgroupns-analysis.md`.
 
 Proceeding to implementation planning (`.claude/plans/`) covering:
 - `docker-compose.yml`: uncomment/fix `process-exporter` (correct image), add `cadvisor`.

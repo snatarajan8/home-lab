@@ -15,6 +15,6 @@ scrape_configs:
     static_configs:
       - targets: ['process-exporter:9256']
 
-  - job_name: 'cadvisor'
+  - job_name: 'podman_exporter'
     static_configs:
-      - targets: ['cadvisor:8080']
+      - targets: ['podman-exporter:9882']

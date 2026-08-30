@@ -46,6 +46,15 @@ A raw `podman run --cgroupns=host` test (bypassing Compose/the Docker-compat lay
 - **Native `podman run --cgroupns=host`**, invoked outside the Docker-compat/Compose path — inconclusive per §5, worth a clean retest outside this troubleshooting session.
 - **Do nothing further** — accept host-level (`node_exporter`) and process-level (`process-exporter`, now working) visibility as sufficient, and drop per-container breakdown as a non-goal given the environment constraint.
 
-## 7. Current State
+## 7. Resolution: Replaced with `prometheus-podman-exporter`
 
-`cadvisor` is deployed and running (harmless, resource-capped, `cap_drop: [ALL]`) but produces no useful per-container data in its current configuration. The `Container Overview` dashboard built for it (`services/monitoring/dashboards/container_overview.json`) will show empty panels as a result — flagging for a decision on whether to ship it empty, pull it, or hold implementation until one of §6's paths is explored.
+§6's first suggested path panned out. `quay.io/navidys/prometheus-podman-exporter` is a maintained, dedicated exporter that talks to Podman's **native** libpod API (`/v4.0.0/libpod/containers/stats`) rather than reading the cgroup filesystem — since Podman's own daemon already has direct access to its own containers' stats internally, it never needs to traverse a cgroup path from an external mount, so the private-cgroupns problem in §2 doesn't apply to it at all. `cadvisor` has been removed from `docker-compose.yml` and replaced with this exporter.
+
+Two rootless-specific gotchas hit and fixed along the way, worth keeping in mind for any future container that needs the Podman socket:
+
+1. **No CLI flag for the socket** — despite most examples assuming `--socket`, this build only reads it from the standard `CONTAINER_HOST` env var (same convention the `podman` CLI itself uses), e.g. `CONTAINER_HOST=unix:///run/podman.sock`.
+2. **Socket ownership under rootless Podman.** The image's default user is `nobody`, which — like any non-zero UID set inside a rootless container — gets remapped into the subordinate UID range (`/etc/subuid`), landing on some arbitrary host UID that does *not* match the socket file's owner (host UID 1001). Only container UID `0` gets the special identity-mapped treatment back to the invoking host user in Podman's default rootless mapping. Fix: `user: "0:0"` in the compose service. (A third env var, `HOME=/tmp`, was also needed — running as UID 0 with no matching `/etc/passwd` entry left `$HOME` resolving to `/`, which the binary isn't allowed to write a config dir under.)
+
+Verified working: `podman_container_cpu_seconds_total`, `podman_container_mem_usage_bytes`, `podman_container_net_input_total`/`net_output_total` all return real per-container series (joined with `podman_container_info` for human-readable names via `... * on(id) group_left(name) podman_container_info`), for all 6 stack containers.
+
+`cadvisor`'s specific incompatibility (§1–§6 above) stands as documented reference for why it doesn't fit this host, independent of this resolution.

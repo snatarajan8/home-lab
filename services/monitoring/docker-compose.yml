@@ -106,25 +106,25 @@ services:
           cpus: '0.3'
           memory: 128M
 
-  cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.49.1
-    container_name: cadvisor
+  podman-exporter:
+    image: quay.io/navidys/prometheus-podman-exporter:latest
+    container_name: podman-exporter
     restart: unless-stopped
-    cgroup: host
+    user: "0:0"
+    environment:
+      - CONTAINER_HOST=unix:///run/podman.sock
+      - HOME=/tmp
+    command:
+      - '--collector.enable-all'
     volumes:
-      - /:/rootfs:ro
-      - /sys:/sys:ro
-      - /run/user/1001/podman/podman.sock:/var/run/docker.sock:ro
+      - /run/user/1001/podman/podman.sock:/run/podman.sock:ro
     cap_drop:
       - ALL
-    cap_add:
-      - SYS_PTRACE
-      - DAC_READ_SEARCH
     deploy:
       resources:
         limits:
-          cpus: '0.5'
-          memory: 256M
+          cpus: '0.3'
+          memory: 128M
 
 volumes:
   prometheus_data:
