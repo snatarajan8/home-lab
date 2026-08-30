@@ -17,7 +17,7 @@ import logging
 import os
 import socket
 import sys
-from http.client import HTTPConnection, HTTPStatus
+from http.client import HTTPConnection
 from urllib.parse import urlparse
 
 import psutil
@@ -209,7 +209,7 @@ def push_to_gateway(url: str, job: str, instance: str, body: str) -> bool:
     try:
         conn.request("PUT", path, body=body, headers={"Content-Type": "text/plain"})
         resp = conn.getresponse()
-        if resp.status in (HTTPStatus.OK, HTTPStatus.NO_CONTENT):
+        if resp.status in (200, 204):
             return True
         log.warning("Pushgateway returned %d: %s", resp.status, resp.read().decode(errors="replace"))
         return False
