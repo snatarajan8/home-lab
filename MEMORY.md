@@ -1,1 +1,2 @@
-- [Metrics Aggregation Strategy](decisions/metrics-aggregation-strategy.md) — Comparison of Pull, Push (Pushgateway), and OTel approaches for metrics collection.
+- [Metrics Aggregation Strategy](docs/monitoring/metrics-aggregation-strategy.md) — Comparison of Pull, Push (Pushgateway), and OTel approaches for metrics collection.
+- [Cross-Platform Metric Agent](docs/monitoring/cross-platform-metric-agent.md) — Native Windows/macOS/Linux agent; supersedes WSL-only. Windows temps via LibreHardwareMonitor, macOS via opt-in macmon.

@@ -2,7 +2,8 @@
 
 ## Status
 
-**Proposed — awaiting user feedback.**
+**Approved (2026-08-31).** All four recommended options selected. Implementation
+plan: [`.claude/plans/cross-platform-metric-agent.md`](../../.claude/plans/cross-platform-metric-agent.md).
 
 Supersedes the "WSL Standardization" decision in
 [`pc-metric-collector-agent.md`](pc-metric-collector-agent.md).
@@ -127,15 +128,12 @@ installs it. Do not gate the agent or the dashboard on Apple Silicon temps.
 5. Update `pc-metric-collector-agent.md` and `.claude/plans/pc-metric-collector.md`
    to point here for the platform decision.
 
-## Open questions for the user
+## Resolved questions (2026-08-31)
 
-1. **Windows:** OK to require installing LibreHardwareMonitor (free, open-source)
-   and enabling its web server? Any preference for WMI over the HTTP endpoint?
-2. **Windows:** move fully to Windows-native Python, or must the WSL path keep
-   working in parallel for a transition period?
-3. **macOS:** acceptable to ship without Apple Silicon temps initially, with
-   `macmon` as an opt-in? Or is CPU temp a hard requirement (→ we take on the
-   `sudo`/helper cost)?
-4. **Scope:** do you also want the Windows-native disk/network metrics corrected
-   now (they're wrong under WSL), or is temperature the only priority for this
-   pass?
+1. **Windows temp source:** LibreHardwareMonitor via local HTTP `/data.json`. ✅
+2. **Windows platform:** move fully to Windows-native Python; WSL path retired
+   (no parallel transition period). ✅
+3. **macOS temps:** ship without Apple Silicon temps; `macmon` opt-in via
+   `mac_temp_source: macmon`. Dashboard does not depend on Mac temps. ✅
+4. **Scope:** full cross-platform rework in one pass — fix temps, correct the
+   WSL-misreported disk/network by going native, add the macOS agent. ✅

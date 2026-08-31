@@ -25,6 +25,17 @@ This list tracks the progress of the homelab build and outlines the next steps f
 - [x] **Container-level visibility**: `cadvisor` doesn't work under rootless Podman (private cgroup namespace — root-caused in `issues/cadvisor-rootless-cgroupns-analysis.md`). Replaced with `podman-exporter` (`quay.io/navidys/prometheus-podman-exporter`), which talks to Podman's native API directly instead of reading cgroupfs, sidestepping the problem entirely. Verified working: real per-container CPU/memory/network data for all 6 stack containers.
 - [x] **Verify Provisioning**: Confirmed — dropping new `.json` files into `services/monitoring/dashboards/` and restarting Grafana auto-registered all 5 new dashboards (no manual import needed). Path in this doc corrected — dashboards live here since the provisioning restructure, not under `provisioning/dashboards/`.
 
+### Metric Agent (Cross-Platform)
+- [x] **Root-caused missing PC temperatures** — agent ran in WSL2, which hides host
+  thermal sensors. See `issues/pc-agent-temperature-missing-analysis.md`.
+- [x] **Cross-platform native agent** — Windows/macOS/Linux, no WSL. Windows temps
+  via LibreHardwareMonitor HTTP; macOS via opt-in `macmon`. Fixed the
+  `node_cpu_seconds_total` rate-of-a-rate bug. See
+  `docs/monitoring/cross-platform-metric-agent.md`.
+- [ ] **Deploy on the PC (Cracked-ITX)** — install Python + LibreHardwareMonitor,
+  switch from the WSL agent to `push-metrics.ps1`.
+- [ ] **Deploy on the Mac** — `launchd` plist; optionally `brew install macmon`.
+
 ## Next Implementation Steps (Proposed)
 
 ### 2. Network & Access (Layer 3)

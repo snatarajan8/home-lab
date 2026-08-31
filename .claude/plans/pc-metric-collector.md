@@ -1,5 +1,9 @@
 # Implementation Plan: PC Metric Collector Agent
 
+> **Superseded by `.claude/plans/cross-platform-metric-agent.md` (2026-08-31).**
+> The WSL-only approach is retired; the agent is now cross-platform native.
+> This file is kept for history.
+
 ## Overview
 
 Add a Prometheus Pushgateway to the Halo's monitoring stack. Create a Python agent (psutil) that runs on WSL on any Windows PC, collects system metrics, and pushes them to the Pushgateway. Create Grafana dashboards with device-level filtering.

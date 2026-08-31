@@ -1,5 +1,13 @@
 # PC Metric Collector Agent
 
+> **⚠️ Platform decision superseded (2026-08-31).** The "WSL Standardization"
+> decision below is retired. WSL2 does not expose host thermal sensors and
+> misreports disk/network — see
+> [`cross-platform-metric-agent.md`](cross-platform-metric-agent.md) and
+> [`../../issues/pc-agent-temperature-missing-analysis.md`](../../issues/pc-agent-temperature-missing-analysis.md).
+> The agent now runs natively on Windows / macOS / Linux. The Pushgateway
+> transport, `device` label convention, and Python + psutil choice still stand.
+
 ## Context
 
 The monitoring stack on the Ryzen Halo currently collects metrics only from local exporters (node-exporter, glances, process-exporter, podman-exporter) via Prometheus's pull model. We need a way for remote PCs (and this WSL session) to push the same performance metrics to the Halo, where they can be dashboarded alongside the Halo's own metrics.
