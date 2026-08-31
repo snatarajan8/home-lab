@@ -38,6 +38,10 @@ mac_temp_source: "macmon"                  # macmon | none
 Set `device_name` explicitly if your hostname is ugly (e.g. an MDM-assigned
 serial) — it becomes the dashboard's device label.
 
+**Per-machine config:** `config.yaml` is the tracked template. For real
+deployments drop a `config.local.yaml` next to it (gitignored) — the launchers
+prefer it automatically, so machine-specific values never end up in git.
+
 ---
 
 ## Linux
@@ -141,11 +145,21 @@ not the per-sensor detail Linux hwmon gives.
 Intel Macs: `macmon` is Apple-Silicon-only; temps would need `powermetrics`
 (sudo) or `osx-cpu-temp` — not wired up. Set `mac_temp_source: "none"`.
 
-**launchd (auto-start):** edit the path in `com.homelab.metricagent.plist`, then
+**launchd (auto-start):**
 
 ```bash
-cp com.homelab.metricagent.plist ~/Library/LaunchAgents/
-launchctl load ~/Library/LaunchAgents/com.homelab.metricagent.plist
+./install-macos.sh
+```
+
+This deploys a self-contained copy to
+`~/Library/Application Support/homelab-metric-agent/` and loads a launchd user
+agent (`com.homelab.metricagent`). The copy is necessary because macOS TCC blocks
+launchd from running code under `~/Desktop` / `~/Documents` / `~/Downloads`,
+where this repo often lives. Re-run the script after editing `agent.py` or the
+config. Logs: `~/Library/Logs/homelab-metric-agent.log`.
+
+```bash
+launchctl unload ~/Library/LaunchAgents/com.homelab.metricagent.plist   # stop
 ```
 
 ---
@@ -172,7 +186,7 @@ python3 agent.py --dry-run
 
 | Metric | Notes |
 | :--- | :--- |
-| `node_cpu_seconds_total` | Per-core CPU time — **cumulative counter** (Prometheus does the `rate()`) |
+| `node_cpu_seconds_total` | Per-core CPU time — **cumulative counter** (Prometheus does the `rate()`). On Apple Silicon the per-core tick counters lag ~10–15% when cores park, so CPU% reads a little low. |
 | `node_memory_*` | Total / free / available / swap (gauges); `Buffers`/`Cached` Linux-only |
 | `node_filesystem_*` | Per-mountpoint size / free / avail, with `fstype` label (auto-detected) |
 | `node_disk_*` | Disk I/O bytes and time (counters) |

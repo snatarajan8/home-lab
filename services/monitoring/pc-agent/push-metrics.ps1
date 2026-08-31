@@ -10,7 +10,11 @@ param(
 
 $ErrorActionPreference = "Stop"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-if (-not $Config) { $Config = Join-Path $ScriptDir "config.yaml" }
+# Config precedence: explicit arg > config.local.yaml (gitignored) > config.yaml
+if (-not $Config) {
+    $Local = Join-Path $ScriptDir "config.local.yaml"
+    $Config = if (Test-Path $Local) { $Local } else { Join-Path $ScriptDir "config.yaml" }
+}
 $VenvDir = Join-Path $ScriptDir ".venv"
 
 function Find-Python {
