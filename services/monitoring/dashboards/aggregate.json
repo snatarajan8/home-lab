@@ -133,13 +133,13 @@
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "editorMode": "code",
-          "expr": "label_replace(\n  100 - ((node_filesystem_avail_bytes{mountpoint=\"/\"} / node_filesystem_size_bytes{mountpoint=\"/\"}) * 100),\n  \"source\", \"$1\", \"instance\", \"(.*)\"\n) or label_replace(\n  100 - ((node_filesystem_avail_bytes{device=~\"$device\", mountpoint=\"/\"} / node_filesystem_size_bytes{device=~\"$device\", mountpoint=\"/\"}) * 100),\n  \"source\", \"$1\", \"device\", \"(.*)\"\n)",
+          "expr": "label_replace(\n  100 - ((node_filesystem_avail_bytes{mountpoint=\"/\"} / node_filesystem_size_bytes{mountpoint=\"/\"}) * 100),\n  \"source\", \"$1\", \"instance\", \"(.*)\"\n) or label_replace(\n  100 - (sum by (device) (node_filesystem_avail_bytes{device=~\"$device\"}) / sum by (device) (node_filesystem_size_bytes{device=~\"$device\"}) * 100),\n  \"source\", \"$1\", \"device\", \"(.*)\"\n)",
           "format": "time_series",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Disk Usage (/)",
+      "title": "Disk Usage",
       "type": "stat"
     },
     {
