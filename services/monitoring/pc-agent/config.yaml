@@ -1,5 +1,12 @@
-pushgateway_url: "http://amd-halo:9091"
-push_interval: 15
+# Homelab Metric Agent — per-device configuration.
+# Copy this file next to agent.py on each device and adjust as needed.
+
+pushgateway_url: "http://amd-halo:9091"   # Halo Pushgateway endpoint
+push_interval: 15                          # seconds between pushes
+job: "pc_agent"                            # Prometheus job label (keep default)
+
+# device_name: "my-box"                    # optional; defaults to the hostname
+
 metrics:
   cpu: true
   memory: true
@@ -7,5 +14,18 @@ metrics:
   network: true
   temperature: true
   load: true
-  disk_paths:
-    - "/"
+  # disk_paths: ["/"]                      # optional; omit to auto-detect real filesystems
+
+# --- Temperature sources (platform-specific) ---
+
+# Windows: requires LibreHardwareMonitor with its web server enabled.
+#   "lhm"  — read http://localhost:8085/data.json  (recommended)
+#   "acpi" — degraded ACPI thermal-zone fallback via WMI (rarely works on desktops)
+#   "none" — skip Windows temperatures
+windows_temp_source: "lhm"
+lhm_url: "http://localhost:8085/data.json"
+
+# macOS (Apple Silicon has no psutil sensor support):
+#   "macmon" — shell out to `macmon` (brew install macmon); sudoless
+#   "none"   — skip macOS temperatures
+mac_temp_source: "none"
