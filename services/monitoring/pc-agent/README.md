@@ -79,14 +79,26 @@ without an active login session:
 `psutil` cannot read temperatures on Windows and the ACPI thermal zone is
 unsupported on most desktop boards. Install
 [LibreHardwareMonitor](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/releases),
-then **Options →**
+then in **Options →**
 
-- ✔ **Run On Windows Startup**, ✔ **Start Minimized / Minimize To Tray**
-- ✔ **Run As Administrator on Startup** (needed for the full sensor set)
+- ✔ **Start Minimized**, ✔ **Minimize To Tray**
 - **Remote Web Server → Port 8085**, then ✔ **Run**
 
-Verify <http://localhost:8085/data.json> returns JSON. Without it, set
-`windows_temp_source: "acpi"` (degraded) or `"none"`.
+**LHM must run elevated** to see the mainboard / SuperIO / CPU-package sensors —
+non-elevated it typically only reports GPU and storage temps. There is no
+"run as admin" checkbox; either:
+
+- launch it via **right-click → Run as administrator** each time, or
+- make a shortcut → **Properties → Shortcut → Advanced → ✔ Run as administrator**
+  (or the **Compatibility** tab's *Run this program as an administrator*), then
+  put that shortcut in `shell:startup`.
+
+LHM's own **Options → Run On Windows Startup** registers a Scheduled Task, so on a
+policy-managed PC that blocks task creation it won't work — use the startup-folder
+shortcut above instead.
+
+Verify <http://localhost:8085/data.json> returns JSON with temperature nodes.
+Without it, set `windows_temp_source: "acpi"` (degraded) or `"none"`.
 
 #### Autostart
 
