@@ -44,6 +44,18 @@ def log(msg: str) -> None:
     print(f"[bootstrap] {msg}")
 
 
+def is_admin() -> bool:
+    """True if this process is elevated (Windows) / running as root (POSIX)."""
+    if SYSTEM == "Windows":
+        try:
+            import ctypes
+
+            return bool(ctypes.windll.shell32.IsUserAnAdmin())
+        except Exception:
+            return False
+    return os.geteuid() == 0
+
+
 def run(cmd, check=False):
     log("$ " + " ".join(str(c) for c in cmd))
     return subprocess.run([str(c) for c in cmd], check=check)
@@ -218,19 +230,38 @@ def setup_windows(args, config):
 
     pyw = app / ".venv/Scripts/pythonw.exe"
     runner = pyw if pyw.exists() else py
+
+    # The agent only needs psutil + an HTTP read of LibreHardwareMonitor, so it
+    # runs fine as a normal user. Register a per-user logon task at the "Limited"
+    # run level — that needs no elevation. `-RunLevel Highest` here is what makes
+    # Register-ScheduledTask fail with "Access is denied" from a non-elevated
+    # shell; only ask for it when we are already elevated.
+    run_level = "Highest" if is_admin() else "Limited"
     ps = (
+        f"$ErrorActionPreference = 'Stop'; "
         f"$a = New-ScheduledTaskAction -Execute '{runner}' "
         f"-Argument '\"{app / 'agent.py'}\" -c \"{dep_cfg}\"'; "
         f"$t = New-ScheduledTaskTrigger -AtLogOn; "
+        f"$p = New-ScheduledTaskPrincipal -UserId $env:USERNAME "
+        f"-LogonType Interactive -RunLevel {run_level}; "
         f"$s = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries "
         f"-DontStopIfGoingOnBatteries -ExecutionTimeLimit ([TimeSpan]::Zero) "
         f"-RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1); "
         f"Register-ScheduledTask -TaskName '{TASK_NAME}' -Action $a -Trigger $t "
-        f"-Settings $s -RunLevel Highest -Force"
+        f"-Principal $p -Settings $s -Force"
     )
-    run(["powershell.exe", "-NoProfile", "-Command", ps], check=True)
+    try:
+        run(["powershell.exe", "-NoProfile", "-Command", ps], check=True)
+    except subprocess.CalledProcessError:
+        log("ERROR: could not register the scheduled task.")
+        log("  If this says 'Access is denied', your account may be blocked from")
+        log("  creating tasks by policy — open an *Administrator* terminal and")
+        log("  re-run:  python bootstrap.py")
+        log(f"  Or run the agent yourself:  \"{runner}\" \"{app / 'agent.py'}\" -c \"{dep_cfg}\"")
+        sys.exit(1)
     run(["schtasks", "/Run", "/TN", TASK_NAME])
-    log(f"scheduled task '{TASK_NAME}' registered (runs at logon) and started.")
+    log(f"scheduled task '{TASK_NAME}' registered (runs at logon, run level "
+        f"{run_level}) and started.")
 
 
 def main():

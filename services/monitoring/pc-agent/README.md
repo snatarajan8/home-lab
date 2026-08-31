@@ -88,6 +88,15 @@ then **Options →**
 Verify <http://localhost:8085/data.json> returns JSON. Without it, set
 `windows_temp_source: "acpi"` (degraded) or `"none"`.
 
+`bootstrap.py` registers the agent as a per-user logon task at the **Limited**
+run level, so it needs **no elevation** — run it from a normal terminal. If your
+account is blocked from creating tasks by policy you'll see
+`Register-ScheduledTask : Access is denied`; open an **Administrator** terminal
+and re-run `python bootstrap.py` (an elevated run registers the task at the
+`Highest` run level). LibreHardwareMonitor still needs its own
+"Run As Administrator" setting for the full sensor set — that's independent of
+how the agent task runs.
+
 ### macOS — macmon (temperatures)
 Apple Silicon exposes no sensors to `psutil`.
 [`macmon`](https://github.com/vladkens/macmon) is a **sudoless** reader of Apple's
