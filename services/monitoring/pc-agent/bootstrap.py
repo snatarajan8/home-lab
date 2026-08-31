@@ -206,10 +206,46 @@ WantedBy=default.target
 # --------------------------------------------------------------------------- Windows
 
 
+RUN_KEY = r"HKCU:\Software\Microsoft\Windows\CurrentVersion\Run"
+
+
+def _win_start_now(runner: Path, agent: Path, cfg: Path) -> None:
+    """Launch the agent detached so it survives this shell exiting."""
+    DETACHED_PROCESS = 0x00000008
+    CREATE_NO_WINDOW = 0x08000000
+    subprocess.Popen(
+        [str(runner), str(agent), "-c", str(cfg)],
+        creationflags=DETACHED_PROCESS | CREATE_NO_WINDOW,
+        close_fds=True,
+    )
+    log("agent started in the background.")
+
+
+def _win_install_run_key(cmdline: str) -> bool:
+    """Per-user logon autostart via HKCU Run — needs no elevation and no Task
+    Scheduler access. Returns True on success."""
+    ps = (
+        f"$ErrorActionPreference = 'Stop'; "
+        f"Set-ItemProperty -Path '{RUN_KEY}' -Name '{TASK_NAME}' -Value '{cmdline}'"
+    )
+    try:
+        run(["powershell.exe", "-NoProfile", "-Command", ps], check=True)
+        return True
+    except subprocess.CalledProcessError:
+        return False
+
+
 def setup_windows(args, config):
     if args.uninstall:
         run(["schtasks", "/Delete", "/TN", TASK_NAME, "/F"])
-        log("removed scheduled task")
+        run(["powershell.exe", "-NoProfile", "-Command",
+             f"Remove-ItemProperty -Path '{RUN_KEY}' -Name '{TASK_NAME}' "
+             f"-ErrorAction SilentlyContinue"])
+        run(["powershell.exe", "-NoProfile", "-Command",
+             "Get-CimInstance Win32_Process -Filter \"Name = 'pythonw.exe'\" "
+             "| Where-Object CommandLine -like '*homelab-metric-agent*' "
+             "| ForEach-Object { Stop-Process -Id $_.ProcessId -Force }"])
+        log("removed scheduled task + Run-key autostart; stopped the running agent")
         return
 
     try:
@@ -250,18 +286,28 @@ def setup_windows(args, config):
         f"Register-ScheduledTask -TaskName '{TASK_NAME}' -Action $a -Trigger $t "
         f"-Principal $p -Settings $s -Force"
     )
+    agent = app / "agent.py"
+    cmdline = f'"{runner}" "{agent}" -c "{dep_cfg}"'
+
     try:
         run(["powershell.exe", "-NoProfile", "-Command", ps], check=True)
+        run(["schtasks", "/Run", "/TN", TASK_NAME])
+        log(f"scheduled task '{TASK_NAME}' registered (runs at logon, run level "
+            f"{run_level}) and started.")
+        return
     except subprocess.CalledProcessError:
-        log("ERROR: could not register the scheduled task.")
-        log("  If this says 'Access is denied', your account may be blocked from")
-        log("  creating tasks by policy — open an *Administrator* terminal and")
-        log("  re-run:  python bootstrap.py")
-        log(f"  Or run the agent yourself:  \"{runner}\" \"{app / 'agent.py'}\" -c \"{dep_cfg}\"")
-        sys.exit(1)
-    run(["schtasks", "/Run", "/TN", TASK_NAME])
-    log(f"scheduled task '{TASK_NAME}' registered (runs at logon, run level "
-        f"{run_level}) and started.")
+        log("could not register a Scheduled Task (likely blocked by policy on a "
+            "managed PC) — falling back to a per-user Run-key autostart.")
+
+    if _win_install_run_key(cmdline):
+        log(f"autostart installed: HKCU\\...\\Run\\{TASK_NAME} (starts at next logon).")
+        _win_start_now(runner, agent, dep_cfg)
+        return
+
+    log("ERROR: both autostart methods failed.")
+    log("  Run the agent yourself, or add this to a shortcut in shell:startup —")
+    log(f"  {cmdline}")
+    sys.exit(1)
 
 
 def main():

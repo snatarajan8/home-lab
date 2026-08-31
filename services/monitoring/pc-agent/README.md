@@ -88,14 +88,28 @@ then **Options →**
 Verify <http://localhost:8085/data.json> returns JSON. Without it, set
 `windows_temp_source: "acpi"` (degraded) or `"none"`.
 
-`bootstrap.py` registers the agent as a per-user logon task at the **Limited**
-run level, so it needs **no elevation** — run it from a normal terminal. If your
-account is blocked from creating tasks by policy you'll see
-`Register-ScheduledTask : Access is denied`; open an **Administrator** terminal
-and re-run `python bootstrap.py` (an elevated run registers the task at the
-`Highest` run level). LibreHardwareMonitor still needs its own
-"Run As Administrator" setting for the full sensor set — that's independent of
-how the agent task runs.
+#### Autostart
+
+`bootstrap.py` first tries a per-user logon **Scheduled Task** at the `Limited`
+run level (no elevation needed; an elevated run uses `Highest` instead). On a
+policy-managed PC, task creation is often blocked entirely —
+`Register-ScheduledTask : Access is denied` regardless of run level — so it then
+falls back to a per-user **`HKCU\…\Run`** autostart entry and launches the agent
+immediately. Both are per-user and survive with no admin rights.
+
+Manage it manually if needed:
+
+```powershell
+# inspect
+Get-ScheduledTask HomelabMetricAgent -ErrorAction SilentlyContinue
+Get-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run' HomelabMetricAgent
+
+# remove everything
+python bootstrap.py --uninstall
+```
+
+LibreHardwareMonitor still needs its own "Run As Administrator" setting for the
+full sensor set — that's independent of how the agent autostarts.
 
 ### macOS — macmon (temperatures)
 Apple Silicon exposes no sensors to `psutil`.
