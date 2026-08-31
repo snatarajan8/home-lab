@@ -24,6 +24,13 @@
         <string>/REPLACE/WITH/ABSOLUTE/PATH/TO/pc-agent/push-metrics</string>
     </array>
 
+    <!-- launchd's default PATH omits Homebrew; macmon lives in /opt/homebrew/bin -->
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
+
     <key>RunAtLoad</key>
     <true/>
 

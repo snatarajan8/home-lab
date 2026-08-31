@@ -356,13 +356,20 @@ def _temp_macos(cfg: dict, device: str) -> list[str]:
         )
         return []
 
-    if not shutil.which("macmon"):
-        warn_once("temp-mac-missing", "mac_temp_source=macmon but `macmon` not found on PATH")
+    # launchd gives jobs a minimal PATH that excludes Homebrew, so fall back to
+    # the usual install locations if `macmon` isn't on PATH.
+    macmon = shutil.which("macmon")
+    for cand in ("/opt/homebrew/bin/macmon", "/usr/local/bin/macmon"):
+        if not macmon and os.path.exists(cand):
+            macmon = cand
+    if not macmon:
+        warn_once("temp-mac-missing",
+                  "mac_temp_source=macmon but `macmon` not found (try `brew install macmon`)")
         return []
 
     try:
         result = subprocess.run(
-            ["macmon", "pipe", "-s", "1", "-i", "200"],
+            [macmon, "pipe", "-s", "1", "-i", "200"],
             capture_output=True, text=True, timeout=10,
         )
         # `macmon pipe` prints one JSON object per sample, newline-delimited.

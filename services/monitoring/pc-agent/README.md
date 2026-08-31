@@ -32,7 +32,7 @@ metrics:
   # disk_paths: ["/"]                      # optional; omit to auto-detect
 windows_temp_source: "lhm"                 # lhm | acpi | none
 lhm_url: "http://localhost:8085/data.json"
-mac_temp_source: "none"                    # macmon | none
+mac_temp_source: "macmon"                  # macmon | none
 ```
 
 Set `device_name` explicitly if your hostname is ugly (e.g. an MDM-assigned
@@ -126,17 +126,20 @@ Register-ScheduledTask -TaskName "HomelabMetricAgent" -Action $action `
 ./push-metrics
 ```
 
-Temperature: Apple Silicon exposes no sensors to `psutil`. To get CPU/GPU temps,
-install [`macmon`](https://github.com/vladkens/macmon) (sudoless) and enable it:
+Temperature: Apple Silicon exposes no sensors to `psutil`. CPU/GPU temps come from
+[`macmon`](https://github.com/vladkens/macmon) — a **sudoless** reader of Apple's
+private IOReport API (`config.yaml` ships with `mac_temp_source: "macmon"`):
 
 ```bash
-brew install macmon
-# config.yaml:
-mac_temp_source: "macmon"
+brew install macmon      # no sudo, for install or use
 ```
 
-Intel Macs: temps would need `powermetrics` (sudo) or `osx-cpu-temp` — not wired
-up; leave `mac_temp_source: "none"`.
+If `macmon` isn't installed the agent just skips temps (one-time log line).
+You get two series — `node_hwmon_temp_celsius{chip="soc",sensor="cpu"|"gpu"}` —
+not the per-sensor detail Linux hwmon gives.
+
+Intel Macs: `macmon` is Apple-Silicon-only; temps would need `powermetrics`
+(sudo) or `osx-cpu-temp` — not wired up. Set `mac_temp_source: "none"`.
 
 **launchd (auto-start):** edit the path in `com.homelab.metricagent.plist`, then
 

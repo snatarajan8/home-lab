@@ -26,6 +26,7 @@ windows_temp_source: "lhm"
 lhm_url: "http://localhost:8085/data.json"
 
 # macOS (Apple Silicon has no psutil sensor support):
-#   "macmon" — shell out to `macmon` (brew install macmon); sudoless
+#   "macmon" — shell out to `macmon` (brew install macmon); sudoless. No-op if
+#              macmon isn't installed. Ignored on non-macOS.
 #   "none"   — skip macOS temperatures
-mac_temp_source: "none"
+mac_temp_source: "macmon"
