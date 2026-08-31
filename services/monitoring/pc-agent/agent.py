@@ -266,6 +266,12 @@ def _lhm_celsius(node: dict) -> "float | None":
     return c
 
 
+# LHM lists SPD / NVMe threshold and metadata rows with Type == "Temperature"
+# too ("Warning Temperature", "Thermal Sensor High Limit", "Temperature Sensor
+# Resolution", …). They are static config values, not live readings — skip them.
+_LHM_TEMP_SKIP = ("limit", "threshold", "warning", "critical", "resolution")
+
+
 def _walk_lhm(node: dict, chip: str, out: list[tuple[str, str, float]]) -> None:
     """Recursively collect (chip, sensor, celsius) from a LibreHardwareMonitor
     /data.json tree. Nodes with a 'HardwareId' key are hardware devices (CPU,
@@ -274,9 +280,11 @@ def _walk_lhm(node: dict, chip: str, out: list[tuple[str, str, float]]) -> None:
     if "HardwareId" in node:
         chip = node.get("Text") or chip
     if node.get("Type") == "Temperature":
-        celsius = _lhm_celsius(node)
-        if celsius is not None:
-            out.append((chip or "lhm", node.get("Text", "unknown"), celsius))
+        name = node.get("Text", "unknown")
+        if not any(w in name.lower() for w in _LHM_TEMP_SKIP):
+            celsius = _lhm_celsius(node)
+            if celsius is not None:
+                out.append((chip or "lhm", name, celsius))
     for child in node.get("Children") or []:
         _walk_lhm(child, chip, out)
 
