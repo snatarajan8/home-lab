@@ -109,9 +109,12 @@ installs it. Do not gate the agent or the dashboard on Apple Silicon temps.
 - **One `agent.py`**, platform dispatch via `platform.system()`. Collectors that
   can't run on a platform return `[]` and log once at WARNING.
 - **`config.yaml`** gains optional `windows_temp_source` / `mac_temp_source`.
-- **Launchers:** keep `push-metrics` (POSIX) for Linux/macOS; add
-  `push-metrics.ps1` + a `schtasks` / Task Scheduler snippet for Windows-native;
-  add a `launchd` plist for macOS auto-start.
+- **Launcher:** a single platform-agnostic `bootstrap.py` (stdlib only) detects
+  the OS, builds the venv, installs `macmon` (macOS) / checks LibreHardwareMonitor
+  (Windows), and registers the autostart service — `launchd` on macOS,
+  `systemd --user` on Linux, a logon Scheduled Task on Windows. `--foreground`
+  and `--uninstall` modes. (Supersedes the earlier per-platform
+  `push-metrics` / `push-metrics.ps1` / `install-macos.sh` scripts.)
 - **Robustness fix:** replace the blanket `except (..., Exception)` in
   `collect_temperature()` with specific exceptions; add a startup self-check that
   logs which collectors are active.

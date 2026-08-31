@@ -32,9 +32,12 @@ This list tracks the progress of the homelab build and outlines the next steps f
   via LibreHardwareMonitor HTTP; macOS via opt-in `macmon`. Fixed the
   `node_cpu_seconds_total` rate-of-a-rate bug. See
   `docs/monitoring/cross-platform-metric-agent.md`.
+- [x] **`bootstrap.py`** — one platform-agnostic script: detects OS, sets up the
+  venv, installs macmon (macOS) / checks LibreHardwareMonitor (Windows), and
+  registers the autostart service (launchd / systemd --user / Scheduled Task).
+- [x] **Deploy on the Mac** — `bootstrap.py` run; launchd agent `com.homelab.metricagent` live.
 - [ ] **Deploy on the PC (Cracked-ITX)** — install Python + LibreHardwareMonitor,
-  switch from the WSL agent to `push-metrics.ps1`.
-- [ ] **Deploy on the Mac** — `launchd` plist; optionally `brew install macmon`.
+  then `python bootstrap.py` (replaces the WSL agent).
 
 ## Next Implementation Steps (Proposed)
 
