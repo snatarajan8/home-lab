@@ -1565,6 +1565,17 @@
           "format": "time_series",
           "range": true,
           "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "sum(node_hwmon_power_watt{job=\"node_exporter\"})",
+          "format": "time_series",
+          "range": true,
+          "refId": "B"
         }
       ],
       "title": "Total Power",
@@ -1666,6 +1677,19 @@
           "legendFormat": "{{instance}}",
           "range": true,
           "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "sum by (instance, sensor) (node_hwmon_power_watt{job=\"node_exporter\"})",
+          "format": "time_series",
+          "instant": false,
+          "legendFormat": "Halo {{sensor}}",
+          "range": true,
+          "refId": "B"
         }
       ],
       "title": "Power Consumption by Device",
@@ -1775,12 +1799,25 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(node_power_watts{instance=~\"$device\"})",
+          "expr": "node_hwmon_power_watt{job=\"node_exporter\"}",
+          "format": "time_series",
+          "instant": false,
+          "legendFormat": "Halo {{chip}} \u2014 {{sensor}}",
+          "range": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "sum(node_power_watts{instance=~\"$device\"}) + sum(node_hwmon_power_watt{job=\"node_exporter\"})",
           "format": "time_series",
           "instant": false,
           "legendFormat": "TOTAL",
           "range": true,
-          "refId": "B"
+          "refId": "C"
         }
       ],
       "title": "Aggregate Power (stacked by device)",

@@ -1849,7 +1849,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(node_power_watts{job=\"node_exporter\"})",
+          "expr": "sum(node_hwmon_power_watt{job=\"node_exporter\"})",
           "format": "time_series",
           "range": true,
           "refId": "A"
@@ -1963,7 +1963,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(node_power_watts)",
+          "expr": "sum(node_power_watts{job=\"pc_agent\"}) + sum(node_hwmon_power_watt{job=\"node_exporter\"})",
           "format": "time_series",
           "range": true,
           "refId": "A"
@@ -2062,7 +2062,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "node_power_watts{job=\"node_exporter\"}",
+          "expr": "node_hwmon_power_watt{job=\"node_exporter\"}",
           "format": "time_series",
           "instant": false,
           "legendFormat": "{{chip}} \u2014 {{sensor}}",
@@ -2075,7 +2075,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(node_power_watts{job=\"node_exporter\"})",
+          "expr": "sum(node_hwmon_power_watt{job=\"node_exporter\"})",
           "format": "time_series",
           "instant": false,
           "legendFormat": "Halo Total",
@@ -2203,10 +2203,10 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(node_power_watts)",
+          "expr": "sum(node_power_watts{job=\"pc_agent\"}) + sum(node_hwmon_power_watt{job=\"node_exporter\"})",
           "format": "time_series",
           "instant": false,
-          "legendFormat": "GRAND TOTAL",
+          "legendFormat": "GRAND TOTAL (incl. Halo)",
           "range": true,
           "refId": "C"
         }
