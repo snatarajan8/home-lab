@@ -14,6 +14,7 @@ metrics:
   network: true
   temperature: true
   load: true
+  power: true
   # disk_paths: ["/"]                      # optional; omit to auto-detect real filesystems
 
 # --- Temperature sources (platform-specific) ---

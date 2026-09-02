@@ -78,6 +78,7 @@ def load_config(path: str) -> dict:
     cfg["metrics"].setdefault("network", True)
     cfg["metrics"].setdefault("temperature", True)
     cfg["metrics"].setdefault("load", True)
+    cfg["metrics"].setdefault("power", True)
     # disk_paths: omitted / empty  => auto-detect real filesystems
     cfg["metrics"].setdefault("disk_paths", [])
     return cfg
@@ -224,8 +225,17 @@ def _temp_line(device: str, chip: str, sensor: str, celsius: float) -> list[str]
     chip = escape_label_value(chip)
     sensor = escape_label_value(sensor)
     return [
-        f'node_hwmon_temp_celsius{{device="{device}",chip="{chip}",sensor="{sensor}"}} {celsius:.1f}',
-        f'node_hwmon_sensor_label{{device="{device}",chip="{chip}",sensor="{sensor}",label="{sensor}"}} 1',
+        f'node_hwmon_temp_celsius{{instance="{device}",device="{device}",chip="{chip}",sensor="{sensor}"}} {celsius:.1f}',
+        f'node_hwmon_sensor_label{{instance="{device}",device="{device}",chip="{chip}",sensor="{sensor}",label="{sensor}"}} 1',
+    ]
+
+
+def _power_line(device: str, chip: str, sensor: str, watts: float) -> list[str]:
+    chip = escape_label_value(chip)
+    sensor = escape_label_value(sensor)
+    return [
+        f'node_power_watts{{instance="{device}",device="{device}",chip="{chip}",sensor="{sensor}"}} {watts:.2f}',
+        f'node_power_sensor_label{{instance="{device}",device="{device}",chip="{chip}",sensor="{sensor}",label="{sensor}"}} 1',
     ]
 
 
@@ -246,6 +256,31 @@ def _temp_linux(device: str) -> list[str]:
                 lines.extend(
                     _temp_line(device, chip_name, entry.label or "unknown", entry.current)
                 )
+    return lines
+
+
+def _power_linux(device: str) -> list[str]:
+    """Try to read power metrics from sysfs (e.g., /sys/class/power_supply/)."""
+    lines = []
+    try:
+        power_supply_dir = "/sys/class/power_supply/"
+        if os.path.exists(power_supply_dir):
+            for ps in os.listdir(power_supply_dir):
+                ps_path = os.path.join(power_supply_dir, ps)
+                if os.path.isdir(ps_path):
+                    # Common sysfs files for power (values in microwatts or microamperes)
+                    # power_now is in microwatts
+                    power_now_path = os.path.join(ps_path, "power_now")
+                    if os.path.exists(power_now_path):
+                        with open(power_now_path, "r") as f:
+                            try:
+                                watts = float(f.read().strip()) / 1_000_000.0
+                                if watts > 0:
+                                    lines.extend(_power_line(device, "sysfs", ps, watts))
+                            except (ValueError, OSError):
+                                pass
+    except Exception as e:
+        warn_once("power-linux", f"Linux power collection failed: {e}")
     return lines
 
 
@@ -272,19 +307,30 @@ def _lhm_celsius(node: dict) -> "float | None":
 _LHM_TEMP_SKIP = ("limit", "threshold", "warning", "critical", "resolution")
 
 
-def _walk_lhm(node: dict, chip: str, out: list[tuple[str, str, float]]) -> None:
-    """Recursively collect (chip, sensor, celsius) from a LibreHardwareMonitor
+def _walk_lhm(node: dict, chip: str, out: list[tuple[str, str, float, str]]) -> None:
+    """Recursively collect (chip, sensor, value, type) from a LibreHardwareMonitor
     /data.json tree. Nodes with a 'HardwareId' key are hardware devices (CPU,
-    GPU, SSD, mainboard, sub-chips); temperature sensors carry Type ==
-    'Temperature' with a numeric 'RawValue'."""
+    GPU, SSD, mainboard, sub-chips); temperature sensors carry Type == 'Temperature'
+    with a numeric 'RawValue'. Power sensors carry Type == 'Power'."""
     if "HardwareId" in node:
         chip = node.get("Text") or chip
-    if node.get("Type") == "Temperature":
+    
+    node_type = node.get("Type")
+    if node_type in ("Temperature", "Power"):
         name = node.get("Text", "unknown")
-        if not any(w in name.lower() for w in _LHM_TEMP_SKIP):
-            celsius = _lhm_celsius(node)
-            if celsius is not None:
-                out.append((chip or "lhm", name, celsius))
+        if node_type == "Temperature":
+            if not any(w in name.lower() for w in _LHM_TEMP_SKIP):
+                celsius = _lhm_celsius(node)
+                if celsius is not None:
+                    out.append((chip or "lhm", name, celsius, "temperature"))
+        elif node_type == "Power":
+            try:
+                power_val = float(node.get("RawValue", 0))
+                if power_val > 0:
+                    out.append((chip or "lhm", name, power_val, "power"))
+            except (TypeError, ValueError):
+                pass
+
     for child in node.get("Children") or []:
         _walk_lhm(child, chip, out)
 
@@ -306,13 +352,16 @@ def _temp_windows(cfg: dict, device: str) -> list[str]:
                 f"temperatures. Install LHM and enable Options > Remote Web Server.",
             )
             return []
-        readings: list[tuple[str, str, float]] = []
+        readings: list[tuple[str, str, float, str]] = []
         _walk_lhm(data, "", readings)
-        if not readings:
+        if not any(r[3] == "temperature" for r in readings):
             warn_once("temp-lhm-empty", f"LHM reachable at {url} but reported no temperature sensors")
         lines = []
-        for chip, sensor, celsius in readings:
-            lines.extend(_temp_line(device, chip, sensor, celsius))
+        for chip, sensor, value, rtype in readings:
+            if rtype == "temperature":
+                lines.extend(_temp_line(device, chip, sensor, value))
+            elif rtype == "power":
+                lines.extend(_power_line(device, chip, sensor, value))
         return lines
 
     if source == "acpi":
@@ -388,11 +437,18 @@ def _temp_macos(cfg: dict, device: str) -> list[str]:
         return []
 
     temp = sample.get("temp", {}) or {}
+    power = sample.get("power", {}) or {}
     lines = []
     for key, sensor in (("cpu_temp_avg", "cpu"), ("gpu_temp_avg", "gpu")):
         val = temp.get(key)
         if isinstance(val, (int, float)) and val > 0:
             lines.extend(_temp_line(device, "soc", sensor, float(val)))
+    
+    for key, sensor in (("cpu_power_avg", "cpu"), ("gpu_power_avg", "gpu")):
+        val = power.get(key)
+        if isinstance(val, (int, float)) and val > 0:
+            lines.extend(_power_line(device, "soc", sensor, float(val)))
+            
     return lines
 
 
@@ -451,7 +507,10 @@ def build_metrics(cfg: dict) -> str:
         lines.extend(collect_temperature(cfg, device))
     if metrics.get("load"):
         lines.extend(collect_load(device))
-
+    if metrics.get("power"):
+        if SYSTEM == "Linux":
+            lines.extend(_power_linux(device))
+        # Windows and macOS: power is already collected by _temp_windows/_temp_macos
     return "\n".join(lines) + "\n"
 
 
@@ -498,7 +557,7 @@ def main():
     )
     cfg = load_config(config_path)
 
-    active = [k for k in ("cpu", "memory", "disk", "network", "temperature", "load")
+    active = [k for k in ("cpu", "memory", "disk", "network", "temperature", "load", "power")
               if cfg["metrics"].get(k)]
     log.info(
         "Metric agent: device=%s platform=%s job=%s pushgateway=%s interval=%ds",
