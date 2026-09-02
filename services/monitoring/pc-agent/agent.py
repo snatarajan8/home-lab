@@ -301,6 +301,26 @@ def _lhm_celsius(node: dict) -> "float | None":
     return c
 
 
+def _lhm_number(node: dict) -> "float | None":
+    """Extract the numeric value of an LHM sensor node. Prefers the numeric
+    RawValue, but LHM also serializes it as a formatted string with units
+    (e.g. '41.5 W' for power, '53.0 °C' for temperature), so fall back to the
+    numeric prefix of the 'Value' string. Returns None if unparseable."""
+    raw = node.get("RawValue")
+    try:
+        v = float(raw)
+    except (TypeError, ValueError):
+        text = str(node.get("Value", "")).strip()
+        first = text.split()[0].replace(",", ".") if text else ""
+        try:
+            v = float(first)
+        except ValueError:
+            return None
+    if v != v:  # NaN
+        return None
+    return v
+
+
 # LHM lists SPD / NVMe threshold and metadata rows with Type == "Temperature"
 # too ("Warning Temperature", "Thermal Sensor High Limit", "Temperature Sensor
 # Resolution", …). They are static config values, not live readings — skip them.
@@ -324,12 +344,9 @@ def _walk_lhm(node: dict, chip: str, out: list[tuple[str, str, float, str]]) -> 
                 if celsius is not None:
                     out.append((chip or "lhm", name, celsius, "temperature"))
         elif node_type == "Power":
-            try:
-                power_val = float(node.get("RawValue", 0))
-                if power_val > 0:
-                    out.append((chip or "lhm", name, power_val, "power"))
-            except (TypeError, ValueError):
-                pass
+            power_val = _lhm_number(node)
+            if power_val is not None and power_val > 0:
+                out.append((chip or "lhm", name, power_val, "power"))
 
     for child in node.get("Children") or []:
         _walk_lhm(child, chip, out)
